@@ -1,0 +1,62 @@
+# SYNTHESE OEFENING NUMMER 5
+
+import pandas as pd
+import numpy as np
+
+verkopen = {
+    'order_id':   [1, 2, 2, 3, 4, 5, 6, 7, 8],
+    'datum':      ['2024-01-10', '2024-01-15', '2024-01-15', '2024-02-03', 
+                   '2024-02-19', 'onbekend', '2024-03-07', '2024-03-22', '2024-03-30'],
+    'klant_id':   [10, 11, 11, 12, 13, 10, 14, 12, 99],
+    'product_id': [101, 102, 102, 103, 101, 104, 102, 103, 105],
+    'aantal':     [1, 2, 2, 1, 3, 1, 2, 1, 4],
+    'korting_pct':[0, 10, 10, 5, 0, 15, 10, 5, 0]
+}
+
+producten = {
+    'product_id': [101, 102, 103, 104, 105],
+    'naam':       ['Laptop', 'Muis', 'Toetsenbord', 'Monitor', 'Webcam'],
+    'prijs':      [999.0, 25.0, 75.0, 349.0, None],
+    'categorie':  ['elektronica', 'accessoire', 'accessoire', 'elektronica', 'accessoire']
+}
+
+klanten = {
+    'klant_id':  [10, 11, 12, 13, 14],
+    'naam':      ['Alice', 'bob', 'Carol', 'David', 'eva'],
+    'stad':      ['Brussel', 'Gent', 'antwerpen', 'Brussel', 'Gent']
+}
+
+df_verkopen = pd.DataFrame(verkopen)
+df_producten = pd.DataFrame(producten)
+df_klanten = pd.DataFrame(klanten)
+
+#TAAK 1
+df_verkopen = df_verkopen.drop_duplicates(subset="order_id")
+
+#TAAK 2
+df_verkopen["datum"] = pd.to_datetime(df_verkopen["datum"],errors="coerce")
+
+#TAAK 3
+df_producten["prijs"] = df_producten["prijs"].fillna(df_producten.groupby("categorie")["prijs"].transform("mean"))
+
+
+#TAAK 4
+df_klanten["stad"] = df_klanten["stad"].str.capitalize()
+df_klanten["naam"] = df_klanten["naam"].str.capitalize()
+
+#TAAK 5
+df_totaal = pd.merge(df_verkopen,df_producten, on="product_id",how="left")
+df_merged = pd.merge(df_totaal,df_klanten, on="klant_id",how="left")
+
+#TAAK 6
+df_merged["omzet_na_korting"] = df_merged["aantal"] * (df_merged["prijs"]) * (1 - (df_merged["korting_pct"] / 100))
+
+#TAAK 7
+df_merged["maand"] = df_merged["datum"].dt.month_name().fillna("Onbekend")
+
+#TAAK 8
+df_merged["is_onbekende_klant"] = ~df_merged["naam_y"].isin(df_klanten["naam"])
+
+#TAAK 9
+print(df_merged.groupby("maand")["omzet_na_korting"].sum().sort_values(ascending=False))
+
